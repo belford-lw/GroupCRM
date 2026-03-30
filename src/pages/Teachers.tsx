@@ -17,34 +17,38 @@ export default function Teachers() {
  const getTeachers = async () => {
   console.log("GET TEACHERS ISHLADI")
 
+// Funksiyani e'lon qilamiz
+const getTeachers = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("Token yo'q! Iltimos login qiling.");
+    return;
+  }
+
   try {
-    const token = localStorage.getItem("token")
-    console.log("TOKEN:", token)
-
-    console.log("FETCH BOSHLANDI")
-
     const res = await fetch("http://localhost:3000/teachers", {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    console.log("FETCH YUBORILDI")
+    if (res.status === 401) {
+      console.error("401 Unauthorized: Token noto'g'ri yoki muddati o'tgan");
+      return;
+    }
 
-    const data = await res.json()
-    console.log("DATA:", data)
+    const data = await res.json();
+    console.log("Teachers:", data);
 
-    setTeachers(data)
-
-  } catch (err) {
-    console.log("ERROR:", err)
+  } catch (error) {
+    console.error("Fetch xatosi:", error);
   }
-}
+};
 
   useEffect(() => {
     getTeachers()
   }, [])
-
+ }
   return (
     // hgvj ghvjhh//
     <div className="p-6 space-y-6">
