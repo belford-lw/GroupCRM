@@ -1,20 +1,44 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import useAuthStore from "../../store/authStore.js";
 import { Lock, User, LogIn, ShieldCheck } from "lucide-react"; 
 
 
-const Login = () => {
-  const [login, setLogin] = useState<string>("admin");
-  const [password, setPassword] = useState<string>("admin123");
-  const navigate = useNavigate();
+const Login = ({setComing}) => {
+  const [login, setLogin] = useState("+998900001122");
+  const [password, setPassword] = useState("Admin@12345");
+  const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const setToken = useAuthStore((state) => state.setToken);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (login === "admin" && password === "admin123") {
 
-      navigate("/admin");
-    } else {
-      alert("Login yoki password xato!");
+    try {
+      const res = await axios.post("http://localhost:3000/auth/login", {
+        phone: login,
+        password: password,
+      });
+
+      console.log("Server javobi:", res.data);
+
+      if (res.data.accessToken) {
+        const token = res.data.accessToken;
+
+        setToken(token);
+
+        setComing(true);
+
+        console.log("Token zustandga saqlandi");
+
+        navigate("/admin");
+      } else {
+        setComing(false)
+        console.log("Token kelmadi");
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -24,7 +48,7 @@ const Login = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-900/20 rounded-full blur-[120px]" />
 
       <div className="relative z-10 w-full max-w-md p-1">
-        <div className="bg-linear-to-b from-blue-500/20 to-transparent p-px rounded-[32px]">
+        <div className="bg-linear-to-b from-blue-500/20 to-transparent p-px rounded-4xl">
           
           <div className="bg-[#0f172a]/80 backdrop-blur-xl text-white p-10 rounded-[31px] shadow-2xl border border-white/5">
             
