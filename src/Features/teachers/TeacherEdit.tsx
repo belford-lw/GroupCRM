@@ -1,6 +1,5 @@
 import { useState } from "react"
-import { Button } from "../../components/ui/button"
-import { Input } from "../../components/ui/input"
+import { Button, Input } from "@mui/material"
 
 const token = localStorage.getItem("token")
 
@@ -31,7 +30,7 @@ export default function TeacherEdit({teacher,refresh}:any){
         className="w-32"
       />
 
-      <Button size="sm" onClick={updateTeacher}>
+      <Button  onClick={updateTeacher}>
         Save
       </Button>
 

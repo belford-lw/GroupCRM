@@ -14,7 +14,7 @@ interface Teacher {
 export default function Teachers() {
 
   const [teachers, setTeachers] = useState<Teacher[]>([])
-  const getTeachers = async () => {
+ const getTeachers = async () => {
   console.log("GET TEACHERS ISHLADI")
 
   try {
@@ -23,7 +23,7 @@ export default function Teachers() {
 
     console.log("FETCH BOSHLANDI")
 
-    const res = await fetch(" http://localhost:3000/teachers", {
+    const res = await fetch("http://localhost:3000/teachers", {
       headers: {
         Authorization: `Bearer ${token}`
       }
