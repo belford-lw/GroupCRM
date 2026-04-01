@@ -1,95 +1,117 @@
-import { useState } from "react"
-import { Button, Input } from "@mui/material"
+import React, { useState } from 'react';
+import axios from 'axios';
+import useAuthStore from '../../store/authStore.js';
 
-interface TeacherForm {
-  name: string
-  surname: string
-  phone: string
-  subject: string
+interface Props {
+  onRefresh: () => void;
 }
 
-interface TeacherAddProps {
-  refresh: () => void
-}
+const TeacherAdd: React.FC<Props> = ({ onRefresh }) => {
+  const accessToken = useAuthStore((state: any) => state.accessToken);
 
-export default function TeacherAdd({ refresh }: TeacherAddProps) {
-  const [form, setForm] = useState<TeacherForm>({
-    name: "",
-    surname: "",
-    phone: "",
-    subject: ""
-  })
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    password: '',
+    monthlySalary: '',
+    photoUrl: ''
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const addTeacher = async () => {
-    if (!form.name || !form.surname || !form.phone || !form.subject) {
-      alert("Iltimos, barcha maydonlarni to‘ldiring")
-      return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // 1. Parol uzunligini frontendda tekshiramiz
+    if (formData.password.length < 6) {
+      alert("Parol kamida 6 ta belgidan iborat bo'lishi shart!");
+      return;
     }
+
+    if (!accessToken) {
+      alert("Tizimga kirmagansiz!");
+      return;
+    }
+
+    // 2. Payloadni backend talabiga moslaymiz
+    const payload = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phone: formData.phone,
+      password: formData.password,
+      // Backend "number string" kutayotgani uchun Number() qilmaymiz, 
+      // shunchaki stringligicha qoladi (masalan: "5000000")
+      monthlySalary: formData.monthlySalary, 
+      photoUrl: formData.photoUrl
+    };
 
     try {
-      const res = await fetch("http://localhost:3000/teachers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(form)
-      })
+      await axios.post('http://localhost:3000/teachers', payload, {
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (!res.ok) throw new Error("Failed to add teacher")
+      setFormData({
+        firstName: '',
+        lastName: '',
+        phone: '',
+        password: '',
+        monthlySalary: '',
+        photoUrl: ''
+      });
 
-      setForm({
-        name: "",
-        surname: "",
-        phone: "",
-        subject: ""
-      })
-
-      refresh() // Teacher ro'yxatini yangilash
-    } catch (error) {
-      console.error("Xatolik:", error)
+      onRefresh();
+      alert("Muvaffaqiyatli qo'shildi!");
+    } catch (error: any) {
+      console.error("Xato tafsiloti:", error.response?.data);
+      alert(`Xato: ${error.response?.data?.message || "Saqlashda xato"}`);
     }
-  }
+  };
 
   return (
-    <div className="grid grid-cols-5 gap-4">
-      <Input
-        name="name"
-        placeholder="Name"
-        value={form.name}
-        onChange={handleChange}
-      />
-      <Input
-        name="surname"
-        placeholder="Surname"
-        value={form.surname}
-        onChange={handleChange}
-      />
-      <Input
-        name="phone"
-        placeholder="Phone"
-        value={form.phone}
-        onChange={handleChange}
-      />
-      <Input
-        name="subject"
-        placeholder="Subject"
-        value={form.subject}
-        onChange={handleChange}
-      />
-      <Button
-        onClick={addTeacher}
-        variant="contained"
-        color="success"
-      >
-        Add
-      </Button>
+    <div className="bg-white p-6 rounded-xl shadow-md mb-6 border">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Yangi o'qituvchi qo'shish</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <input name="firstName" placeholder="Ism" value={formData.firstName} onChange={handleChange} className="border p-2 rounded outline-none focus:ring-1 focus:ring-blue-500 text-black" required />
+        <input name="lastName" placeholder="Familya" value={formData.lastName} onChange={handleChange} className="border p-2 rounded outline-none focus:ring-1 focus:ring-blue-500 text-black" required />
+        <input name="phone" placeholder="Telefon" value={formData.phone} onChange={handleChange} className="border p-2 rounded outline-none focus:ring-1 focus:ring-blue-500 text-black" required />
+        
+        {/* Password maydoni uchun minimal uzunlik */}
+        <input 
+          type="password" 
+          name="password" 
+          placeholder="Parol (kamida 6 ta belgi)" 
+          value={formData.password} 
+          onChange={handleChange} 
+          className="border p-2 rounded outline-none focus:ring-1 focus:ring-blue-500 text-black" 
+          minLength={6}
+          required 
+        />
+        
+        <input 
+          type="number" 
+          name="monthlySalary" 
+          placeholder="Oylik maoshi (faqat raqam yozing)" 
+          value={formData.monthlySalary} 
+          onChange={handleChange} 
+          className="border p-2 rounded outline-none focus:ring-1 focus:ring-blue-500 text-black" 
+          required 
+        />
+        
+        <input name="photoUrl" placeholder="Rasm URL" value={formData.photoUrl} onChange={handleChange} className="border p-2 rounded outline-none focus:ring-1 focus:ring-blue-500 text-black" />
+
+        <button type="submit" className="lg:col-span-3 bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition active:scale-95">
+          Saqlash
+        </button>
+      </form>
     </div>
-  )
-}
+  );
+};
+
+export default TeacherAdd;

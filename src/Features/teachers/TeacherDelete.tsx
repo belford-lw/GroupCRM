@@ -1,30 +1,23 @@
-import { Button } from "@mui/material"
+import React from 'react';
+import axios from 'axios';
+import useAuthStore from '../../store/authStore.js';
 
-const token = localStorage.getItem("token")
+interface Props { id: string; onRefresh: () => void; }
 
-export default function TeacherDelete({id,refresh}:any){
+const TeacherDelete: React.FC<Props> = ({ id, onRefresh }) => {
+  const accessToken = useAuthStore((state: any) => state.accessToken);
 
-  const deleteTeacher = async ()=>{
+  const handleDelete = async () => {
+    if (!window.confirm("O'chirilsinmi?")) return;
+    try {
+      await axios.delete(`http://localhost:3000/teachers/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      onRefresh();
+    } catch (err) { alert("Xatolik yuz berdi!"); }
+  };
 
-    await fetch(`http://localhost:3000/teachers/${id}`,{
-      method:"DELETE",
-      headers:{
-      Authorization:`Bearer ${token}`
-    }
-    })
+  return <button onClick={handleDelete} className="text-red-500 hover:underline">O'chirish</button>;
+};
 
-    refresh()
-  }
-
-  return(
-
-    <Button
-      variant="destructive"
-      size="sm"
-      onClick={deleteTeacher}
-    >
-      Delete
-    </Button>
-
-  )
-}
+export default TeacherDelete;
